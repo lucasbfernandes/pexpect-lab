@@ -56,3 +56,13 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#Venv
+venv/
+
+#Idea
+.idea/
+
+#Results
+results/
+
