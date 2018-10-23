@@ -8,6 +8,7 @@ RESULTS_DIRECTORY = 'results'
 P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
 PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
 
+
 def get_command_line_arguments():
     parser = argparse.ArgumentParser(description='Probability qos project runner')
     parser.add_argument('-n', help='Number of performance tests', type=int, action="store", required=True)
