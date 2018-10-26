@@ -3,6 +3,8 @@ import time
 import argparse
 import os
 import pandas
+import math
+
 
 RESULTS_DIRECTORY = 'results'
 P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
@@ -82,7 +84,7 @@ def compute_row_mean(final_results, row_count, key):
 def build_final_results_row(final_results_dict, column_names):
     final_results_row = []
     for column_name in column_names:
-        final_results_row.append(final_results_dict[column_name])
+        final_results_row.append(math.floor(final_results_dict[column_name]))
     return final_results_row
 
 
@@ -118,7 +120,7 @@ def run_performance_tests():
     time.sleep(5)
 
     run_project.sendline('h1 /bin/bash -c "python {path}/sender-host.py" &'.format(path=PEXPECT_PROJECT_PATH))
-    time.sleep(70)
+    time.sleep(120)
 
 
 def main():
