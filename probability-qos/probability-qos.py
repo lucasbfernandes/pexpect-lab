@@ -84,7 +84,10 @@ def compute_row_mean(final_results, row_count, key):
 def build_final_results_row(final_results_dict, column_names):
     final_results_row = []
     for column_name in column_names:
-        final_results_row.append(math.floor(final_results_dict[column_name]))
+        if not column_name == 'drop_rate':
+            final_results_row.append(int(math.floor(final_results_dict[column_name])))
+        else:
+            final_results_row.append(final_results_dict[column_name])
     return final_results_row
 
 
@@ -92,7 +95,7 @@ def get_final_results_array(final_results):
     final_results_array = []
     column_names = ['max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
     for key in final_results:
-        final_results_array.append([key] + build_final_results_row(final_results[key], column_names))
+        final_results_array.append([int(key)] + build_final_results_row(final_results[key], column_names))
     return final_results_array
 
 
