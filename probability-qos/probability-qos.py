@@ -4,9 +4,9 @@ import argparse
 import os
 import pandas
 import math
+import constants
 
 
-RESULTS_DIRECTORY = 'results'
 P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
 PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
 
@@ -14,23 +14,24 @@ PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probabil
 def get_command_line_arguments():
     parser = argparse.ArgumentParser(description='Probability qos project runner')
     parser.add_argument('-n', help='Number of performance tests', type=int, action="store", required=True)
+    parser.add_argument('-d', nargs='+', help='Distributions names', type=str, required=True)
     return parser.parse_args()
 
 
-def delete_results_directory():
-    if os.path.exists(RESULTS_DIRECTORY):
-        print('Deleted results directory with path {path}/results'.format(path=PEXPECT_PROJECT_PATH))
-        pexpect.run('rm -r {path}/results'.format(path=PEXPECT_PROJECT_PATH))
+def delete_results_directory(distribution):
+    if os.path.exists(distribution):
+        pexpect.run('rm -r {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
+        print('Deleted {d} directory with path {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
 
 
-def create_results_directory():
-    pexpect.run('mkdir {path}/results'.format(path=PEXPECT_PROJECT_PATH))
-    print('Results directory created with path {path}/results'.format(path=PEXPECT_PROJECT_PATH))
+def create_results_directory(distribution):
+    pexpect.run('mkdir {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
+    print('Directory {d} created with path {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
 
 
-def move_result_log(index):
-    pexpect.run('cp /tmp/p4s.s1.log {path}/results/test{index}.log'.format(index=index, path=PEXPECT_PROJECT_PATH))
-    print('Result file generated with path {path}/results/test{index}.log'.format(index=index, path=PEXPECT_PROJECT_PATH))
+def move_result_log(index, distribution):
+    pexpect.run('cp /tmp/p4s.s1.log {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
+    print('Result file generated with path {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
 
 
 def compute_row(row_dict, final_results, key):
@@ -104,12 +105,13 @@ def compute_final_results_mean(final_results, row_count):
         final_results[key] = compute_row_mean(final_results, row_count, key)
 
 
-def run_performance_tests_setup():
-    delete_results_directory()
-    create_results_directory()
+def run_performance_tests_setup(distributions):
+    for distribution in distributions:
+        delete_results_directory(distribution)
+        create_results_directory(distribution)
 
 
-def run_performance_tests():
+def run_performance_tests(distribution):
     mn_clean = pexpect.spawn('mn -c')
     mn_clean.expect('Cleanup complete.')
 
@@ -122,37 +124,49 @@ def run_performance_tests():
     run_project.sendline('h3 /bin/bash -c "python {path}/receiver-host.py" &'.format(path=PEXPECT_PROJECT_PATH))
     time.sleep(5)
 
-    run_project.sendline('h1 /bin/bash -c "python {path}/sender-host.py" &'.format(path=PEXPECT_PROJECT_PATH))
+    run_project.sendline('h1 /bin/bash -c "python {path}/sender-host.py -d {d}" &'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
     time.sleep(120)
+
+
+def run_distributions_tests(distributions):
+    print('Starting performance tests')
+    for i in range(distributions):
+        print('Running test: #{index}'.format(index=i+1))
+        for distribution in distributions:
+            if distribution in constants.SENDER_OPTS:
+                print('Running test #{index} for distribution {d}'.format(index=i+1, d=distribution))
+                run_performance_tests(distribution)
+                move_result_log(i + 1, distribution)
+            else:
+                print('Distribution {d} does not exist'.format(d=distribution))
+        print('Finished test: #{index}'.format(index=i+1))
+
+
+def generate_final_results(distributions):
+    for distribution in distributions:
+        final_results = {}
+        row_count = {}
+        for i in range(distributions):
+            df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i+1), sep=';', header=None)
+            df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+            compute_final_results(df, final_results, row_count)
+            print(df.head(5))
+
+        compute_final_results_mean(final_results, row_count)
+        final_results_array = get_final_results_array(final_results)
+
+        final_df = pandas.DataFrame(final_results_array)
+        final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+        print(final_df.head(5))
+
+        final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
 def main():
     arguments = get_command_line_arguments()
-    print('Starting performance tests')
-    run_performance_tests_setup()
-
-    for i in range(arguments.n):
-        print('Running test: #{index}'.format(index=i+1))
-        run_performance_tests()
-        print('Finished test: #{index}'.format(index=i+1))
-        move_result_log(i+1)
-
-    final_results = {}
-    row_count = {}
-    for i in range(arguments.n):
-        df = pandas.read_csv('{path}/results/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, index=i+1), sep=';', header=None)
-        df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-        compute_final_results(df, final_results, row_count)
-        print(df.head(5))
-
-    compute_final_results_mean(final_results, row_count)
-    final_results_array = get_final_results_array(final_results)
-
-    final_df = pandas.DataFrame(final_results_array)
-    final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-    print(final_df.head(5))
-
-    final_df.to_csv('{path}/results/final_results.log'.format(path=PEXPECT_PROJECT_PATH), index=False, sep=';', header=None)
+    run_performance_tests_setup(arguments.d)
+    run_distributions_tests(arguments.d)
+    generate_final_results(arguments.d)
 
 
 main()

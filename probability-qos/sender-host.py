@@ -1,7 +1,35 @@
 import pexpect
+import argparse
+import constants
+
+
+DITG_SEND_PATH = '/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGSend'
+
+
+def get_distribution_command(distribution):
+    if distribution in constants.SENDER_OPTS:
+        return constants.SENDER_OPTS[distribution]
+    else:
+        return None
+
+
+def get_command_line_arguments():
+    parser = argparse.ArgumentParser(description='Probability qos project runner')
+    parser.add_argument('-d', '--distributions', nargs='+', help='Distributions names', type=str, required=True)
+    return parser.parse_args()
+
+
+def run_ditg(distribution):
+    command = get_distribution_command(distribution)
+    if command:
+        ditg_sender = pexpect.spawn('{path} {command}'.format(path=DITG_SEND_PATH, command=command))
+        ditg_sender.wait()
+
 
 def main():
-    ditg_receiver = pexpect.spawn('/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGSend -T UDP -a 10.0.2.10 -e 50 -C 10000 -t 100000 -l sender.log -x receiver.log')
-    ditg_receiver.wait()
+    arguments = get_command_line_arguments()
+    for distribution in arguments.distributions:
+        run_ditg(distribution)
+
 
 main()
