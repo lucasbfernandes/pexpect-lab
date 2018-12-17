@@ -128,9 +128,9 @@ def run_performance_tests(distribution):
     time.sleep(120)
 
 
-def run_distributions_tests(distributions):
+def run_distributions_tests(distributions, number_of_tests):
     print('Starting performance tests')
-    for i in range(distributions):
+    for i in range(number_of_tests):
         print('Running test: #{index}'.format(index=i+1))
         for distribution in distributions:
             if distribution in constants.SENDER_OPTS:
@@ -142,22 +142,22 @@ def run_distributions_tests(distributions):
         print('Finished test: #{index}'.format(index=i+1))
 
 
-def generate_final_results(distributions):
+def generate_final_results(distributions, number_of_tests):
     for distribution in distributions:
         final_results = {}
         row_count = {}
-        for i in range(distributions):
+        for i in range(number_of_tests):
             df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i+1), sep=';', header=None)
             df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
             compute_final_results(df, final_results, row_count)
-            print(df.head(5))
 
         compute_final_results_mean(final_results, row_count)
         final_results_array = get_final_results_array(final_results)
 
+        print(final_results_array)
+
         final_df = pandas.DataFrame(final_results_array)
         final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-        print(final_df.head(5))
 
         final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
@@ -165,8 +165,8 @@ def generate_final_results(distributions):
 def main():
     arguments = get_command_line_arguments()
     run_performance_tests_setup(arguments.d)
-    run_distributions_tests(arguments.d)
-    generate_final_results(arguments.d)
+    run_distributions_tests(arguments.d, arguments.n)
+    generate_final_results(arguments.d, arguments.n)
 
 
 main()
