@@ -10,6 +10,7 @@ import constants
 P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
 PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
 MBPS_MULTIPLIER = 0.000008
+ZSCORE_PERCENT = 95
 
 
 def get_command_line_arguments():
@@ -35,13 +36,44 @@ def move_result_log(index, distribution):
     print('Result file generated with path {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
 
 
+def build_error_margin_results_row(error_margin_results_dict, column_names):
+    error_margin_results_row = []
+    for column_name in column_names:
+        error_margin_results_row.append(error_margin_results_dict[column_name])
+    return error_margin_results_row
+
+
+def get_error_margin_results_array(error_margin_results):
+    error_margin_results_array = []
+    column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    for key in error_margin_results:
+        error_margin_results_array.append([int(key)] + build_error_margin_results_row(error_margin_results[key], column_names))
+    return error_margin_results_array
+
+
+def get_error_margin_row_data_dict(row, row_count):
+    row_key = row_count[row['seconds']]
+    return {
+        'max_flow': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['max_flow'] / math.sqrt(row_count[row_key])),
+        'total_flow_mbps': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_flow_mbps'] / math.sqrt(row_count[row_key])),
+        'total_flow': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_flow'] / math.sqrt(row_count[row_key])),
+        'drop_rate': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['drop_rate'] / math.sqrt(row_count[row_key])),
+        'packets_dropped': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['packets_dropped'] / math.sqrt(row_count[row_key])),
+        'total_dropped': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_dropped'] / math.sqrt(row_count[row_key])),
+        'total_passed_mbps': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_passed_mbps'] / math.sqrt(row_count[row_key])),
+        'total_passed': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_passed'] / math.sqrt(row_count[row_key])),
+    }
+
+
+def compute_error_margin_results(df, error_margin_results, row_count):
+    for index, row in df.iterrows():
+        error_margin_results[row['seconds']] = get_error_margin_row_data_dict(row, row_count)
+
+
 def build_deviation_results_row(deviation_results_dict, column_names):
     deviation_results_row = []
     for column_name in column_names:
-        if not column_name == 'drop_rate' and not column_name == 'total_flow_mbps' and not column_name == 'total_passed_mbps':
-            deviation_results_row.append(int(math.floor(deviation_results_dict[column_name])))
-        else:
-            deviation_results_row.append(deviation_results_dict[column_name])
+        deviation_results_row.append(deviation_results_dict[column_name])
     return deviation_results_row
 
 
@@ -132,10 +164,7 @@ def compute_variance_results_mean(variance_results, row_count):
 def build_variance_results_row(variance_results_dict, column_names):
     variance_results_row = []
     for column_name in column_names:
-        if not column_name == 'drop_rate' and not column_name == 'total_flow_mbps' and not column_name == 'total_passed_mbps':
-            variance_results_row.append(int(math.floor(variance_results_dict[column_name])))
-        else:
-            variance_results_row.append(variance_results_dict[column_name])
+        variance_results_row.append(variance_results_dict[column_name])
     return variance_results_row
 
 
@@ -204,10 +233,7 @@ def compute_row_mean(final_results, row_count, key):
 def build_final_results_row(final_results_dict, column_names):
     final_results_row = []
     for column_name in column_names:
-        if not column_name == 'drop_rate' and not column_name == 'total_flow_mbps' and not column_name == 'total_passed_mbps':
-            final_results_row.append(int(math.floor(final_results_dict[column_name])))
-        else:
-            final_results_row.append(final_results_dict[column_name])
+        final_results_row.append(final_results_dict[column_name])
     return final_results_row
 
 
@@ -263,6 +289,17 @@ def run_distributions_tests(distributions, number_of_tests):
         print('Finished test: #{index}'.format(index=i+1))
 
 
+def generate_error_margin_results(distribution, error_margin_results, row_count):
+    df = pandas.read_csv('{path}/{d}/deviation_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    compute_error_margin_results(df, error_margin_results, row_count)
+    error_margin_results_array = get_error_margin_results_array(error_margin_results)
+
+    error_margin_df = pandas.DataFrame(error_margin_results_array)
+    error_margin_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    error_margin_df.to_csv('{path}/{d}/error_margin_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
 def generate_deviation_results(distribution, deviation_results):
     df = pandas.read_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
     df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
@@ -308,11 +345,12 @@ def generate_final_results(distributions, number_of_tests):
         row_count = {}
         variance_results = {}
         deviation_results = {}
+        error_margin_results = {}
 
         generate_mean_results(number_of_tests, distribution, mean_results, row_count)
         generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count)
         generate_deviation_results(distribution, deviation_results)
-
+        generate_error_margin_results(distribution, error_margin_results, row_count)
 
 def generate_gnuplot_files(distributions):
     for distribution in distributions:

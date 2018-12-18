@@ -15,3 +15,7 @@ GNUPLOT_SCRIPTS = [
     'maxflow-flowpassed.gnu',
     'drop-rate.gnu'
 ]
+
+CONFIDENCE_ZSCORES = {
+    95: 1.960
+}
