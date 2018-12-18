@@ -9,3 +9,9 @@ SENDER_OPTS = {
     # 'gamma': '-T UDP -a 10.0.2.10 -e 50 -C 10000 -t 100000 -l sender.log -x receiver.log',
     # 'weibull': '-T UDP -a 10.0.2.10 -e 50 -C 10000 -t 100000 -l sender.log -x receiver.log'
 }
+
+GNUPLOT_SCRIPTS = [
+    'maxflow-totalflow.gnu',
+    'maxflow-flowpassed.gnu',
+    'drop-rate.gnu'
+]

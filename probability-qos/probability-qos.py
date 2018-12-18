@@ -314,11 +314,18 @@ def generate_final_results(distributions, number_of_tests):
         generate_deviation_results(distribution, deviation_results)
 
 
+def generate_gnuplot_files(distributions):
+    for distribution in distributions:
+        for gnuplot_script in constants.GNUPLOT_SCRIPTS:
+            gnuplot = pexpect.spawn('gnuplot -c {script} {d}'.format(script=gnuplot_script, d=distribution))
+            gnuplot.wait()
+
+
 def main():
     arguments = get_command_line_arguments()
     run_performance_tests_setup(arguments.d)
     run_distributions_tests(arguments.d, arguments.n)
     generate_final_results(arguments.d, arguments.n)
-
+    generate_gnuplot_files(arguments.d)
 
 main()
