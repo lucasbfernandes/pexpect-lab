@@ -9,6 +9,7 @@ import constants
 
 P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
 PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
+MBPS_MULTIPLIER = 0.000008
 
 
 def get_command_line_arguments():
@@ -141,10 +142,12 @@ def get_variance_results_array(variance_results):
 def compute_row(row_dict, final_results, key):
     return {
         'max_flow': final_results[key]['max_flow'] + row_dict['max_flow'],
+        'total_flow_mbps': final_results[key]['total_flow_mbps'] + row_dict['total_flow_mbps'],
         'total_flow': final_results[key]['total_flow'] + row_dict['total_flow'],
         'drop_rate': final_results[key]['drop_rate'] + row_dict['drop_rate'],
         'packets_dropped': final_results[key]['packets_dropped'] + row_dict['packets_dropped'],
         'total_dropped': final_results[key]['total_dropped'] + row_dict['total_dropped'],
+        'total_passed_mbps': final_results[key]['total_passed_mbps'] + row_dict['total_passed_mbps'],
         'total_passed': final_results[key]['total_passed'] + row_dict['total_passed']
     }
 
@@ -152,10 +155,12 @@ def compute_row(row_dict, final_results, key):
 def get_row_data_dict(row):
     return {
         'max_flow': row['max_flow'],
+        'total_flow_mbps': row['total_flow'] * MBPS_MULTIPLIER,
         'total_flow': row['total_flow'],
         'drop_rate': row['drop_rate'],
         'packets_dropped': row['packets_dropped'],
         'total_dropped': row['total_dropped'],
+        'total_passed_mbps': row['total_passed'] * MBPS_MULTIPLIER,
         'total_passed': row['total_passed']
     }
 
@@ -178,10 +183,12 @@ def compute_final_results(df, final_results, row_count):
 def compute_row_mean(final_results, row_count, key):
     return {
         'max_flow': final_results[key]['max_flow'] / row_count[key],
+        'total_flow_mbps': final_results[key]['total_flow_mbps'] / row_count[key],
         'total_flow': final_results[key]['total_flow'] / row_count[key],
         'drop_rate': final_results[key]['drop_rate'] / row_count[key],
         'packets_dropped': final_results[key]['packets_dropped'] / row_count[key],
         'total_dropped': final_results[key]['total_dropped'] / row_count[key],
+        'total_passed_mbps': final_results[key]['total_passed_mbps'] / row_count[key],
         'total_passed': final_results[key]['total_passed'] / row_count[key]
     }
 
@@ -189,7 +196,7 @@ def compute_row_mean(final_results, row_count, key):
 def build_final_results_row(final_results_dict, column_names):
     final_results_row = []
     for column_name in column_names:
-        if not column_name == 'drop_rate':
+        if not column_name == 'drop_rate' and not column_name == 'total_flow_mbps' and not column_name == 'total_passed_mbps':
             final_results_row.append(int(math.floor(final_results_dict[column_name])))
         else:
             final_results_row.append(final_results_dict[column_name])
@@ -198,7 +205,7 @@ def build_final_results_row(final_results_dict, column_names):
 
 def get_final_results_array(final_results):
     final_results_array = []
-    column_names = ['max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+    column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in final_results:
         final_results_array.append([int(key)] + build_final_results_row(final_results[key], column_names))
     return final_results_array
@@ -283,8 +290,7 @@ def generate_mean_results(number_of_tests, distribution, mean_results, row_count
     final_results_array = get_final_results_array(mean_results)
 
     final_df = pandas.DataFrame(final_results_array)
-    final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped',
-                        'total_passed']
+    final_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
