@@ -34,6 +34,40 @@ def move_result_log(index, distribution):
     print('Result file generated with path {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
 
 
+def build_deviation_results_row(deviation_results_dict, column_names):
+    deviation_results_row = []
+    for column_name in column_names:
+        if not column_name == 'drop_rate':
+            deviation_results_row.append(int(math.floor(deviation_results_dict[column_name])))
+        else:
+            deviation_results_row.append(deviation_results_dict[column_name])
+    return deviation_results_row
+
+
+def get_deviation_results_array(deviation_results):
+    deviation_results_array = []
+    column_names = ['max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+    for key in deviation_results:
+        deviation_results_array.append([int(key)] + build_deviation_results_row(deviation_results[key], column_names))
+    return deviation_results_array
+
+
+def get_deviation_row_data_dict(row):
+    return {
+        'max_flow': math.sqrt(row['max_flow']),
+        'total_flow': math.sqrt(row['total_flow']),
+        'drop_rate': math.sqrt(row['drop_rate']),
+        'packets_dropped': math.sqrt(row['packets_dropped']),
+        'total_dropped': math.sqrt(row['total_dropped']),
+        'total_passed': math.sqrt(row['total_passed'])
+    }
+
+
+def compute_deviation_results(df, deviation_results):
+    for index, row in df.iterrows():
+        deviation_results[row['seconds']] = get_deviation_row_data_dict(row)
+
+
 def compute_variance_row(row_dict, variance_results, key):
     return {
         'max_flow': variance_results[key]['max_flow'] + row_dict['max_flow'],
@@ -43,6 +77,7 @@ def compute_variance_row(row_dict, variance_results, key):
         'total_dropped': variance_results[key]['total_dropped'] + row_dict['total_dropped'],
         'total_passed': variance_results[key]['total_passed'] + row_dict['total_passed']
     }
+
 
 def get_variance_row_data_dict(row, mean_results):
     row_second = row['seconds']
@@ -213,38 +248,57 @@ def run_distributions_tests(distributions, number_of_tests):
         print('Finished test: #{index}'.format(index=i+1))
 
 
+def generate_deviation_results(distribution, deviation_results):
+    df = pandas.read_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+    compute_deviation_results(df, deviation_results)
+    deviation_results_array = get_deviation_results_array(deviation_results)
+
+    deviation_df = pandas.DataFrame(deviation_results_array)
+    deviation_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+    deviation_df.to_csv('{path}/{d}/deviation_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
+def generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count):
+    for i in range(number_of_tests):
+        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
+        df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+        compute_variance_results(df, variance_results, mean_results)
+
+    compute_variance_results_mean(variance_results, row_count)
+    variance_results_array = get_variance_results_array(variance_results)
+
+    variance_df = pandas.DataFrame(variance_results_array)
+    variance_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped','total_passed']
+    variance_df.to_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
+def generate_mean_results(number_of_tests, distribution, mean_results, row_count):
+    for i in range(number_of_tests):
+        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
+        df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
+        compute_final_results(df, mean_results, row_count)
+
+    compute_final_results_mean(mean_results, row_count)
+    final_results_array = get_final_results_array(mean_results)
+
+    final_df = pandas.DataFrame(final_results_array)
+    final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped',
+                        'total_passed']
+    final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
 def generate_final_results(distributions, number_of_tests):
     for distribution in distributions:
-        # Computing mean
         mean_results = {}
         row_count = {}
-        for i in range(number_of_tests):
-            df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i+1), sep=';', header=None)
-            df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-            compute_final_results(df, mean_results, row_count)
-
-        compute_final_results_mean(mean_results, row_count)
-        final_results_array = get_final_results_array(mean_results)
-        print(final_results_array)
-
-        final_df = pandas.DataFrame(final_results_array)
-        final_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-        final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
-
-        #Computing variance
         variance_results = {}
-        for i in range(number_of_tests):
-            df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i+1), sep=';', header=None)
-            df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-            compute_variance_results(df, variance_results, mean_results)
+        deviation_results = {}
 
-        compute_variance_results_mean(variance_results, row_count)
-        variance_results_array = get_variance_results_array(variance_results)
-        print(variance_results_array)
+        generate_mean_results(number_of_tests, distribution, mean_results, row_count)
+        generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count)
+        generate_deviation_results(distribution, deviation_results)
 
-        variance_df = pandas.DataFrame(variance_results_array)
-        variance_df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
-        variance_df.to_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 def main():
     arguments = get_command_line_arguments()
