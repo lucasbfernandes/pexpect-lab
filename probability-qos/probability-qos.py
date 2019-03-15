@@ -6,9 +6,6 @@ import pandas
 import math
 import constants
 
-
-P4_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/projects/p4-dev/projects/multipath-probability-qos'
-PEXPECT_PROJECT_PATH = '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
 MBPS_MULTIPLIER = 0.000008
 ZSCORE_PERCENT = 95
 
@@ -22,18 +19,18 @@ def get_command_line_arguments():
 
 def delete_results_directory(distribution):
     if os.path.exists(distribution):
-        pexpect.run('rm -r {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
-        print('Deleted {d} directory with path {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
+        pexpect.run('rm -r {path}/{d}'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution))
+        print('Deleted {d} directory with path {path}/{d}'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution))
 
 
 def create_results_directory(distribution):
-    pexpect.run('mkdir {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
-    print('Directory {d} created with path {path}/{d}'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
+    pexpect.run('mkdir {path}/{d}'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution))
+    print('Directory {d} created with path {path}/{d}'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution))
 
 
 def move_result_log(index, distribution):
-    pexpect.run('cp /tmp/p4s.s1.log {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
-    print('Result file generated with path {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=PEXPECT_PROJECT_PATH))
+    pexpect.run('cp /tmp/p4s.s1.log {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=constants.PEXPECT_PROJECT_PATH))
+    print('Result file generated with path {path}/{d}/test{index}.log'.format(index=index, d=distribution, path=constants.PEXPECT_PROJECT_PATH))
 
 
 def build_error_margin_results_row(error_margin_results_dict, column_names):
@@ -262,16 +259,16 @@ def run_performance_tests(distribution):
     mn_clean = pexpect.spawn('mn -c')
     mn_clean.expect('Cleanup complete.')
 
-    run_project = pexpect.spawn('python {path}/tools/run_project.py'.format(path=P4_PROJECT_PATH))
+    run_project = pexpect.spawn('python {path}/tools/run_project.py'.format(path=constants.P4_PROJECT_PATH))
     run_project.expect('mininet>')
 
-    apply_commands = pexpect.spawn('python {path}/tools/apply_commands.py'.format(path=P4_PROJECT_PATH))
+    apply_commands = pexpect.spawn('python {path}/tools/apply_commands.py'.format(path=constants.P4_PROJECT_PATH))
     apply_commands.wait()
 
-    run_project.sendline('h3 /bin/bash -c "python {path}/receiver-host.py" &'.format(path=PEXPECT_PROJECT_PATH))
+    run_project.sendline('h3 /bin/bash -c "python {path}/receiver-host.py" &'.format(path=constants.PEXPECT_PROJECT_PATH))
     time.sleep(5)
 
-    run_project.sendline('h1 /bin/bash -c "python {path}/sender-host.py -d {d}" &'.format(path=PEXPECT_PROJECT_PATH, d=distribution))
+    run_project.sendline('h1 /bin/bash -c "python {path}/sender-host.py -d {d}" &'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution))
     time.sleep(120)
 
 
@@ -290,30 +287,30 @@ def run_distributions_tests(distributions, number_of_tests):
 
 
 def generate_error_margin_results(distribution, error_margin_results, row_count):
-    df = pandas.read_csv('{path}/{d}/deviation_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    df = pandas.read_csv('{path}/{d}/deviation_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
     df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     compute_error_margin_results(df, error_margin_results, row_count)
     error_margin_results_array = get_error_margin_results_array(error_margin_results)
 
     error_margin_df = pandas.DataFrame(error_margin_results_array)
     error_margin_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
-    error_margin_df.to_csv('{path}/{d}/error_margin_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+    error_margin_df.to_csv('{path}/{d}/error_margin_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
 def generate_deviation_results(distribution, deviation_results):
-    df = pandas.read_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    df = pandas.read_csv('{path}/{d}/variance_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
     df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     compute_deviation_results(df, deviation_results)
     deviation_results_array = get_deviation_results_array(deviation_results)
 
     deviation_df = pandas.DataFrame(deviation_results_array)
     deviation_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
-    deviation_df.to_csv('{path}/{d}/deviation_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+    deviation_df.to_csv('{path}/{d}/deviation_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
 def generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count):
     for i in range(number_of_tests):
-        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
+        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
         df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
         compute_variance_results(df, variance_results, mean_results)
 
@@ -322,12 +319,12 @@ def generate_variance_results(number_of_tests, distribution, variance_results, m
 
     variance_df = pandas.DataFrame(variance_results_array)
     variance_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
-    variance_df.to_csv('{path}/{d}/variance_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+    variance_df.to_csv('{path}/{d}/variance_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
 def generate_mean_results(number_of_tests, distribution, mean_results, row_count):
     for i in range(number_of_tests):
-        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
+        df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
         df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
         compute_final_results(df, mean_results, row_count)
 
@@ -336,7 +333,7 @@ def generate_mean_results(number_of_tests, distribution, mean_results, row_count
 
     final_df = pandas.DataFrame(final_results_array)
     final_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
-    final_df.to_csv('{path}/{d}/final_results.log'.format(path=PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+    final_df.to_csv('{path}/{d}/final_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
 
 
 def generate_final_results(distributions, number_of_tests):
@@ -351,6 +348,7 @@ def generate_final_results(distributions, number_of_tests):
         generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count)
         generate_deviation_results(distribution, deviation_results)
         generate_error_margin_results(distribution, error_margin_results, row_count)
+
 
 def generate_gnuplot_files(distributions):
     for distribution in distributions:

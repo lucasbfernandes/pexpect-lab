@@ -1,7 +1,9 @@
 import pexpect
+import constants
+
 
 def main():
-    ditg_receiver = pexpect.spawn('/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGRecv')
+    ditg_receiver = pexpect.spawn('{path}'.format(path=constants.DITG_RECV_PATH))
     ditg_receiver.expect('Finish on UDP port', timeout=300)
 
 main()

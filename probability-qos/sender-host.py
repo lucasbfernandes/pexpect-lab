@@ -3,9 +3,6 @@ import argparse
 import constants
 
 
-DITG_SEND_PATH = '/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGSend'
-
-
 def get_distribution_command(distribution):
     if distribution in constants.SENDER_OPTS:
         return constants.SENDER_OPTS[distribution]
@@ -22,7 +19,7 @@ def get_command_line_arguments():
 def run_ditg(distribution):
     command = get_distribution_command(distribution)
     if command:
-        ditg_sender = pexpect.spawn('{path} {command}'.format(path=DITG_SEND_PATH, command=command))
+        ditg_sender = pexpect.spawn('{path} {command}'.format(path=constants.DITG_SEND_PATH, command=command))
         ditg_sender.wait()
 
 
