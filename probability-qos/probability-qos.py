@@ -48,6 +48,19 @@ def get_error_margin_results_array(error_margin_results):
     return error_margin_results_array
 
 
+def get_clean_row_data_dict(row):
+    return {
+        'max_flow': row['max_flow'],
+        'total_flow_mbps': row['total_flow_mbps'],
+        'total_flow': row['total_flow'],
+        'drop_rate': row['drop_rate'],
+        'packets_dropped': row['packets_dropped'],
+        'total_dropped': row['total_dropped'],
+        'total_passed_mbps': row['total_passed_mbps'],
+        'total_passed': row['total_passed']
+    }
+
+
 def get_error_margin_row_data_dict(row, row_count):
     row_key = row_count[row['seconds']]
     return {
@@ -60,6 +73,90 @@ def get_error_margin_row_data_dict(row, row_count):
         'total_passed_mbps': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_passed_mbps'] / math.sqrt(row_count[row_key])),
         'total_passed': constants.CONFIDENCE_ZSCORES[ZSCORE_PERCENT] * (row['total_passed'] / math.sqrt(row_count[row_key])),
     }
+
+
+def get_mean_plus_ci_data_dict(final_results_row, error_margin_row):
+    return {
+        'max_flow': final_results_row['max_flow'] + error_margin_row['max_flow'],
+        'total_flow_mbps': final_results_row['total_flow_mbps'] + error_margin_row['total_flow_mbps'],
+        'total_flow': final_results_row['total_flow'] + error_margin_row['total_flow'],
+        'drop_rate': final_results_row['drop_rate'] + error_margin_row['drop_rate'],
+        'packets_dropped': final_results_row['packets_dropped'] + error_margin_row['packets_dropped'],
+        'total_dropped': final_results_row['total_dropped'] + error_margin_row['total_dropped'],
+        'total_passed_mbps': final_results_row['total_passed_mbps'] + error_margin_row['total_passed_mbps'],
+        'total_passed': final_results_row['total_passed'] + error_margin_row['total_passed']
+    }
+
+
+def compute_mean_plus_ci_results(final_results_df, error_margin_df, mean_plus_ci_results):
+    final_results_dict = {}
+    error_margin_dict = {}
+
+    for index, row in final_results_df.iterrows():
+        final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
+
+    for index, row in error_margin_df.iterrows():
+        error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
+
+    for key in final_results_dict:
+        mean_plus_ci_results[key] = get_mean_plus_ci_data_dict(final_results_dict[key], error_margin_dict[key])
+
+
+def build_mean_plus_ci_results_row(mean_plus_ci_results_dict, column_names):
+    mean_plus_ci_results_row = []
+    for column_name in column_names:
+        mean_plus_ci_results_row.append(mean_plus_ci_results_dict[column_name])
+    return mean_plus_ci_results_row
+
+
+def get_mean_plus_ci_results_array(mean_plus_ci_results):
+    mean_plus_ci_results_array = []
+    column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    for key in mean_plus_ci_results:
+        mean_plus_ci_results_array.append([int(key)] + build_mean_plus_ci_results_row(mean_plus_ci_results[key], column_names))
+    return mean_plus_ci_results_array
+
+
+def get_mean_minus_ci_data_dict(final_results_row, error_margin_row):
+    return {
+        'max_flow': final_results_row['max_flow'] - error_margin_row['max_flow'],
+        'total_flow_mbps': final_results_row['total_flow_mbps'] - error_margin_row['total_flow_mbps'],
+        'total_flow': final_results_row['total_flow'] - error_margin_row['total_flow'],
+        'drop_rate': final_results_row['drop_rate'] - error_margin_row['drop_rate'],
+        'packets_dropped': final_results_row['packets_dropped'] - error_margin_row['packets_dropped'],
+        'total_dropped': final_results_row['total_dropped'] - error_margin_row['total_dropped'],
+        'total_passed_mbps': final_results_row['total_passed_mbps'] - error_margin_row['total_passed_mbps'],
+        'total_passed': final_results_row['total_passed'] - error_margin_row['total_passed']
+    }
+
+
+def compute_mean_minus_ci_results(final_results_df, error_margin_df, mean_minus_ci_results):
+    final_results_dict = {}
+    error_margin_dict = {}
+
+    for index, row in final_results_df.iterrows():
+        final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
+
+    for index, row in error_margin_df.iterrows():
+        error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
+
+    for key in final_results_dict:
+        mean_minus_ci_results[key] = get_mean_minus_ci_data_dict(final_results_dict[key], error_margin_dict[key])
+
+
+def build_mean_minus_ci_results_row(mean_minus_ci_results_dict, column_names):
+    mean_minus_ci_results_row = []
+    for column_name in column_names:
+        mean_minus_ci_results_row.append(mean_minus_ci_results_dict[column_name])
+    return mean_minus_ci_results_row
+
+
+def get_mean_minus_ci_results_array(mean_minus_ci_results):
+    mean_minus_ci_results_array = []
+    column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    for key in mean_minus_ci_results:
+        mean_minus_ci_results_array.append([int(key)] + build_mean_minus_ci_results_row(mean_minus_ci_results[key], column_names))
+    return mean_minus_ci_results_array
 
 
 def compute_error_margin_results(df, error_margin_results, row_count):
@@ -286,6 +383,36 @@ def run_distributions_tests(distributions, number_of_tests):
         print('Finished test: #{index}'.format(index=i+1))
 
 
+def generate_mean_minus_ci_results(distribution, mean_minus_ci_results, row_count):
+    final_results_df = pandas.read_csv('{path}/{d}/final_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    final_results_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+
+    error_margin_df = pandas.read_csv('{path}/{d}/error_margin_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    error_margin_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+
+    compute_mean_minus_ci_results(final_results_df, error_margin_df, mean_minus_ci_results)
+    mean_minus_ci_results_array = get_mean_minus_ci_results_array(mean_minus_ci_results)
+
+    mean_minus_ci_df = pandas.DataFrame(mean_minus_ci_results_array)
+    mean_minus_ci_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    mean_minus_ci_df.to_csv('{path}/{d}/mean_minus_ci_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
+def generate_mean_plus_ci_results(distribution, mean_plus_ci_results, row_count):
+    final_results_df = pandas.read_csv('{path}/{d}/final_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    final_results_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+
+    error_margin_df = pandas.read_csv('{path}/{d}/error_margin_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
+    error_margin_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+
+    compute_mean_plus_ci_results(final_results_df, error_margin_df, mean_plus_ci_results)
+    mean_plus_ci_results_array = get_mean_plus_ci_results_array(mean_plus_ci_results)
+
+    mean_plus_ci_df = pandas.DataFrame(mean_plus_ci_results_array)
+    mean_plus_ci_df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
+    mean_plus_ci_df.to_csv('{path}/{d}/mean_plus_ci_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), index=False, sep=';', header=None)
+
+
 def generate_error_margin_results(distribution, error_margin_results, row_count):
     df = pandas.read_csv('{path}/{d}/deviation_results.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution), sep=';', header=None)
     df.columns = ['seconds', 'max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
@@ -343,11 +470,15 @@ def generate_final_results(distributions, number_of_tests):
         variance_results = {}
         deviation_results = {}
         error_margin_results = {}
+        mean_minus_ci_results = {}
+        mean_plus_ci_results = {}
 
         generate_mean_results(number_of_tests, distribution, mean_results, row_count)
         generate_variance_results(number_of_tests, distribution, variance_results, mean_results, row_count)
         generate_deviation_results(distribution, deviation_results)
         generate_error_margin_results(distribution, error_margin_results, row_count)
+        generate_mean_minus_ci_results(distribution, mean_minus_ci_results, row_count)
+        generate_mean_plus_ci_results(distribution, mean_plus_ci_results, row_count)
 
 
 def generate_gnuplot_files(distributions):
