@@ -15,7 +15,8 @@ SENDER_OPTS = {
 GNUPLOT_SCRIPTS = [
     'maxflow-totalflow.gnu',
     'maxflow-flowpassed.gnu',
-    'drop-rate.gnu'
+    'drop-rate.gnu',
+    'final_passed_error_margin.gnu'
 ]
 
 CONFIDENCE_ZSCORES = {
@@ -26,3 +27,13 @@ P4_PROJECT_PATH = os.environ.get('P4_PROJECT_PATH') or '/home/lucasbfernandes/Wo
 PEXPECT_PROJECT_PATH = os.environ.get('PEXPECT_PROJECT_PATH') or '/home/lucasbfernandes/Work/UFU/side/pexpect-lab/probability-qos'
 DITG_RECV_PATH = os.environ.get('DITG_RECV_PATH') or '/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGRecv'
 DITG_SEND_PATH = os.environ.get('DITG_SEND_PATH') or '/home/lucasbfernandes/Downloads/D-ITG-2.8.1-r1023/bin/ITGSend'
+
+# /home/ubuntu/Work/UFU/masters/projects/D-ITG-2.8.1-r1023/bin/ITGRecv
+# /home/ubuntu/Work/UFU/masters/projects/D-ITG-2.8.1-r1023/bin/ITGSend
+# /home/ubuntu/Work/UFU/masters/projects/pexpect-lab/probability-qos
+# /home/ubuntu/Work/UFU/masters/projects/p4-dev/projects/multipath-probability-qos
+
+# P4_PROJECT_PATH="/home/ubuntu/Work/UFU/masters/projects/p4-dev/projects/multipath-probability-qos"
+# PEXPECT_PROJECT_PATH="/home/ubuntu/Work/UFU/masters/projects/pexpect-lab/probability-qos"
+# DITG_RECV_PATH="/home/ubuntu/Work/UFU/masters/projects/D-ITG-2.8.1-r1023/bin/ITGRecv"
+# DITG_SEND_PATH="/home/ubuntu/Work/UFU/masters/projects/D-ITG-2.8.1-r1023/bin/ITGSend"
