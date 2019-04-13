@@ -44,6 +44,7 @@ def get_error_margin_results_array(error_margin_results):
     error_margin_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in error_margin_results:
+        print("ERROR_MARGIN_RESULTS KEY", key)
         error_margin_results_array.append([int(key)] + build_error_margin_results_row(error_margin_results[key], column_names))
     return error_margin_results_array
 
@@ -113,6 +114,7 @@ def get_mean_plus_ci_results_array(mean_plus_ci_results):
     mean_plus_ci_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in mean_plus_ci_results:
+        print("MEAN_PLUS_CI KEY", key)
         mean_plus_ci_results_array.append([int(key)] + build_mean_plus_ci_results_row(mean_plus_ci_results[key], column_names))
     return mean_plus_ci_results_array
 
@@ -155,6 +157,7 @@ def get_mean_minus_ci_results_array(mean_minus_ci_results):
     mean_minus_ci_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in mean_minus_ci_results:
+        print("MEAN_MINUS_CI KEY", key)
         mean_minus_ci_results_array.append([int(key)] + build_mean_minus_ci_results_row(mean_minus_ci_results[key], column_names))
     return mean_minus_ci_results_array
 
@@ -175,6 +178,7 @@ def get_deviation_results_array(deviation_results):
     deviation_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in deviation_results:
+        print("DEVIATION_RESULTS KEY", key)
         deviation_results_array.append([int(key)] + build_deviation_results_row(deviation_results[key], column_names))
     return deviation_results_array
 
@@ -266,6 +270,7 @@ def get_variance_results_array(variance_results):
     variance_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in variance_results:
+        print("VARIANCE_RESULTS KEY", key)
         variance_results_array.append([int(key)] + build_variance_results_row(variance_results[key], column_names))
     return variance_results_array
 
@@ -335,6 +340,7 @@ def get_final_results_array(final_results):
     final_results_array = []
     column_names = ['max_flow', 'total_flow_mbps', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed_mbps', 'total_passed']
     for key in final_results:
+        print("FINAL_RESULTS KEY", key)
         final_results_array.append([int(key)] + build_final_results_row(final_results[key], column_names))
     return final_results_array
 
