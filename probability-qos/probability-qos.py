@@ -313,12 +313,6 @@ def compute_row_results(row_dict, final_results, row_count, key):
 def compute_final_results(df, final_results, row_count):
     for index, row in df.iterrows():
         row_dict = get_row_data_dict(row)
-        try:
-            print(int(row['seconds']))
-        except:
-            print("FAILED!")
-            print(int(row['seconds']))
-
         compute_row_results(row_dict, final_results, row_count,  row['seconds'])
 
 
@@ -463,7 +457,6 @@ def generate_variance_results(number_of_tests, distribution, variance_results, m
 
 def generate_mean_results(number_of_tests, distribution, mean_results, row_count):
     for i in range(number_of_tests):
-        print("CURRENT TEST:", i + 1)
         df = pandas.read_csv('{path}/{d}/test{index}.log'.format(path=constants.PEXPECT_PROJECT_PATH, d=distribution, index=i + 1), sep=';', header=None)
         df.columns = ['seconds', 'max_flow', 'total_flow', 'drop_rate', 'packets_dropped', 'total_dropped', 'total_passed']
         compute_final_results(df, mean_results, row_count)
@@ -478,7 +471,6 @@ def generate_mean_results(number_of_tests, distribution, mean_results, row_count
 
 def generate_final_results(distributions, number_of_tests):
     for distribution in distributions:
-        print("CURRENT.DISTRIBUTION:", distribution)
         mean_results = {}
         row_count = {}
         variance_results = {}
