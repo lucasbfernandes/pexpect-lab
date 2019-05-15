@@ -164,7 +164,7 @@ def get_mean_minus_ci_results_array(mean_minus_ci_results):
 
 def compute_error_margin_results(df, error_margin_results, row_count):
     for index, row in df.iterrows():
-        if row['seconds'].isdigit():
+        if str(int(row['seconds'])).isdigit():
             error_margin_results[row['seconds']] = get_error_margin_row_data_dict(row, row_count)
 
 
@@ -199,7 +199,7 @@ def get_deviation_row_data_dict(row):
 
 def compute_deviation_results(df, deviation_results):
     for index, row in df.iterrows():
-        if row['seconds'].isdigit():
+        if str(int(row['seconds'])).isdigit():
             deviation_results[row['seconds']] = get_deviation_row_data_dict(row)
 
 
@@ -239,7 +239,7 @@ def compute_variance_row_results(row_dict, variance_results, key):
 
 def compute_variance_results(df, variance_results, mean_results):
     for index, row in df.iterrows():
-        if row['seconds'].isdigit():
+        if str(int(row['seconds'])).isdigit():
             row_dict = get_variance_row_data_dict(row, mean_results)
             compute_variance_row_results(row_dict, variance_results, row['seconds'])
 
@@ -315,7 +315,7 @@ def compute_row_results(row_dict, final_results, row_count, key):
 
 def compute_final_results(df, final_results, row_count):
     for index, row in df.iterrows():
-        if row['seconds'].isdigit():
+        if str(int(row['seconds'])).isdigit():
             row_dict = get_row_data_dict(row)
             compute_row_results(row_dict, final_results, row_count,  row['seconds'])
 

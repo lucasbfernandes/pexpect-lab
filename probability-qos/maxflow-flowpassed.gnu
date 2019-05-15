@@ -1,5 +1,6 @@
 #!/usr/bin/gnuplot
 
+set xtics 1
 set term png
 set output ARG1.'/maxflow-flowpassed.png'
 set datafile separator ";"
