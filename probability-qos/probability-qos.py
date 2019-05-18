@@ -315,7 +315,7 @@ def compute_row_results(row_dict, final_results, row_count, key):
 
 def compute_final_results(df, final_results, row_count):
     for index, row in df.iterrows():
-        if str(row['seconds']).replace('.', '', 1):
+        if str(row['seconds']).replace('.', '', 1).isdigit():
             row_dict = get_row_data_dict(row)
             compute_row_results(row_dict, final_results, row_count,  row['seconds'])
 
