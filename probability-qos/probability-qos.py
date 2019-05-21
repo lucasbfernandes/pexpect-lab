@@ -94,10 +94,12 @@ def compute_mean_plus_ci_results(final_results_df, error_margin_df, mean_plus_ci
     error_margin_dict = {}
 
     for index, row in final_results_df.iterrows():
-        final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
+        if str(row['seconds']).replace('.', '', 1).isdigit():
+            final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
 
     for index, row in error_margin_df.iterrows():
-        error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
+        if str(row['seconds']).replace('.', '', 1).isdigit():
+            error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
 
     for key in final_results_dict:
         mean_plus_ci_results[key] = get_mean_plus_ci_data_dict(final_results_dict[key], error_margin_dict[key])
@@ -137,10 +139,12 @@ def compute_mean_minus_ci_results(final_results_df, error_margin_df, mean_minus_
     error_margin_dict = {}
 
     for index, row in final_results_df.iterrows():
-        final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
+        if str(row['seconds']).replace('.', '', 1).isdigit():
+            final_results_dict[row['seconds']] = get_clean_row_data_dict(row)
 
     for index, row in error_margin_df.iterrows():
-        error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
+        if str(row['seconds']).replace('.', '', 1).isdigit():
+            error_margin_dict[row['seconds']] = get_clean_row_data_dict(row)
 
     for key in final_results_dict:
         mean_minus_ci_results[key] = get_mean_minus_ci_data_dict(final_results_dict[key], error_margin_dict[key])
