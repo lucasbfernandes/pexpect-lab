@@ -67,3 +67,5 @@ venv/
 results/
 
 *.png
+
+.DS_Store
