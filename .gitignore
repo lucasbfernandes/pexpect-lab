@@ -48,9 +48,6 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
-*.log
-
 # Sphinx documentation
 docs/_build/
 
@@ -62,10 +59,5 @@ venv/
 
 #Idea
 .idea/
-
-#Results
-results/
-
-*.png
 
 .DS_Store
